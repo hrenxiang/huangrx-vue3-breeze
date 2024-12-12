@@ -1,0 +1,126 @@
+// 全局配置
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: pingfang-sc-regular, serif !important;
+  line-height: 1.5;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.el-table thead {
+  color: #515a6e !important;
+}
+
+.el-table th.el-table__cell {
+  border-right: none !important;
+  background-color: var(--el-fill-color-light) !important;
+}
+
+.el-table th.el-table__cell:hover::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: inline-block;
+  height: 20px;
+  content: ' ';
+  border-left: 1px solid rgb(191 191 191);
+  transform: translateY(-50%);
+}
+
+.el-table__header-wrapper,
+.el-table__header,
+.el-scrollbar__view,
+.el-table__body {
+  width: 100% !important;
+}
+
+.el-scrollbar__view {
+  height: 100%;
+}
+
+.el-table--border .el-table__cell {
+  border-right: none !important;
+}
+
+.el-card__custom {
+  height: 100%;
+}
+
+.el-card__four-row {
+  height: 100%;
+
+  .el-card__body {
+    display: grid;
+    height: 100%;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 20px;
+  }
+}
+
+.el-card__custom .el-card__body {
+  display: grid;
+  height: 100%;
+  grid-template-rows: auto 1fr auto;
+  gap: 20px;
+}
+
+.el-card__custom-detail {
+  height: 100%;
+}
+
+.el-card__custom-detail .el-card__body {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.el-select {
+  width: 210px !important;
+}
+
+.custom-status-wrapper {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  flex-direction: row;
+}
+
+.el-button.custom-status-button {
+  padding: 2.5px !important;
+  margin-right: 8px;
+  width: 2.5px !important;
+  height: 2.5px !important;
+}
+
+.custom-el-link {
+  padding: 6px 12px !important;
+  border-radius: 5px;
+}
+
+.custom-el-link:hover {
+  background-color: var(--el-fill-color-light);
+}
+
+.is-bordered-label {
+  width: 150px !important;
+  color: #909399 !important;
+}
+
+.custom-detail__part-title {
+  padding: 36px 0 16px;
+  font-size: 24px;
+  font-family: pingfang-sc-medium, serif !important;
+  color: #000c19;
+  line-height: 20px;
+  font-weight: 500;
+}

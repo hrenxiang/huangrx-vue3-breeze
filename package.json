@@ -12,12 +12,32 @@
     "commit": "git-cz"
   },
   "dependencies": {
-    "vue": "^3.5.13"
+    "@icon-park/vue-next": "^1.4.2",
+    "@tiptap/extension-image": "^2.10.3",
+    "@tiptap/extension-link": "^2.10.3",
+    "@tiptap/extension-text-align": "^2.10.3",
+    "@tiptap/extension-underline": "^2.10.3",
+    "@tiptap/starter-kit": "^2.10.3",
+    "@tiptap/vue-3": "^2.10.3",
+    "@weiruo/tiptap-extension-indent": "^2.0.4-1",
+    "element-plus": "^2.9.0",
+    "i": "^0.3.7",
+    "jwt-decode": "^4.0.0",
+    "moment": "^2.30.1",
+    "npm": "^10.9.2",
+    "nprogress": "1.0.0-1",
+    "pinia": "^2.3.0",
+    "spark-md5": "^3.0.2",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0",
+    "vue3-lottie": "^3.3.1",
+    "xgplayer": "^3.0.20"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
     "@eslint/js": "^9.16.0",
+    "@types/nprogress": "^0.2.3",
     "@vitejs/plugin-vue": "^5.2.1",
     "commitizen": "^4.3.1",
     "cz-git": "^1.11.0",
@@ -47,24 +67,10 @@
     }
   },
   "lint-staged": {
-    "*.{js,ts}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{cjs,json}": [
-      "prettier --write"
-    ],
-    "*.{vue,html}": [
-      "eslint --fix",
-      "prettier --write",
-      "stylelint --fix"
-    ],
-    "*.{scss,css}": [
-      "stylelint --fix",
-      "prettier --write"
-    ],
-    "*.md": [
-      "prettier --write"
-    ]
+    "*.{js,ts}": ["eslint --fix", "prettier --write"],
+    "*.{cjs,json}": ["prettier --write"],
+    "*.{vue,html}": ["eslint --fix", "prettier --write", "stylelint --fix"],
+    "*.{scss,css}": ["stylelint --fix", "prettier --write"],
+    "*.md": ["prettier --write"]
   }
 }

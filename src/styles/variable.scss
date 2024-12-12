@@ -1,0 +1,20 @@
+@font-face {
+  font-family: pingfang-sc-medium;
+  src: url('@/assets/font/PingFang-SC-Medium.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: pingfang-sc-regular;
+  src: url('@/assets/font/PingFangSC-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+$top-bar-height: 60px;
+$sidebar-width: 220px;
+$sidebar-padding-lr: 10px;
+$circle-center-center-out: circle(10%);
+$circle-center-center-in: circle(125%);
+$dark-grayish-blue: #303133;

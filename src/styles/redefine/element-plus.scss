@@ -1,0 +1,15 @@
+/**
+  * 报错，找不到相应模块
+  * @forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  *   $colors: (
+  *     'primary': (
+  *       'base': #1a77ff,
+  *     ),
+  *   ),
+  * );
+ */
+@import 'element-plus/dist/index.css';
+
+:root {
+  --el-color-primary: #1a77ff !important;
+}

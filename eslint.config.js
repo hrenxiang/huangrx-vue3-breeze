@@ -6,7 +6,19 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  // 定义适用于所有 JavaScript、TypeScript 和 Vue 文件的规则。
+  // 导入 Prettier 的 ESLint 配置，以确保代码风格与 Prettier 一致。
+  eslintConfigPrettier,
+
+  // 引入推荐的 JavaScript 规则配置。
+  pluginJs.configs.recommended,
+
+  // 展开并引入 TypeScript 推荐的规则配置。
+  ...tseslint.configs.recommended,
+
+  // 展开并引入 Vue 插件中 'flat/essential' 规则配置。
+  ...pluginVue.configs['flat/essential'],
+
+  // 定义适用于所有 JavaScript、TypeScript 和 Vue 文件的规则。【一定要配置在上述引入的配置后面】
   {
     // 指定要应用此配置的文件模式。
     files: ['**/*.{js,mjs,cjs,ts,vue}'],
@@ -16,7 +28,9 @@ export default [
       globals: globals.browser,
     },
     // 这里可以配置 ESLint 规则，或自定义规则。
-    rules: {},
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
   },
 
   // 特别针对 `.vue` 文件的额外配置。
@@ -30,16 +44,4 @@ export default [
       },
     },
   },
-
-  // 导入 Prettier 的 ESLint 配置，以确保代码风格与 Prettier 一致。
-  eslintConfigPrettier,
-
-  // 引入推荐的 JavaScript 规则配置。
-  pluginJs.configs.recommended,
-
-  // 展开并引入 TypeScript 推荐的规则配置。
-  ...tseslint.configs.recommended,
-
-  // 展开并引入 Vue 插件中 'flat/essential' 规则配置。
-  ...pluginVue.configs['flat/essential'],
 ];
