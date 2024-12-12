@@ -1,3 +1,7 @@
+export interface IAnyObj {
+  [index: string]: unknown;
+}
+
 export interface TokenPayload {
   userName: string;
   userId: string;
