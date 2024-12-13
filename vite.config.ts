@@ -17,7 +17,7 @@ export default defineConfig((config) => {
     css: {
       preprocessorOptions: {
         scss: {
-          api: 'modern-compiler', // 使用现代编译器
+          // api: 'modern-compiler', // 使用现代编译器
           additionalData: '@use "@/styles/variable.scss" as *;',
         },
       },

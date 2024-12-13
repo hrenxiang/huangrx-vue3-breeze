@@ -19,9 +19,8 @@ const isCached = ref([]);
 
 <style lang="scss" scoped>
 .app-main {
-  padding: 16px 20px;
+  padding: $sidebar-padding-lr;
   width: 100%;
-  background: #f7f8fa;
 }
 
 .fade-enter-active,

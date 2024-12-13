@@ -12,9 +12,12 @@
   font-style: normal;
 }
 
-$top-bar-height: 60px;
+$top-bar-height: 72px;
 $sidebar-width: 220px;
-$sidebar-padding-lr: 10px;
+$sidebar-padding-lr: 15px;
 $circle-center-center-out: circle(10%);
 $circle-center-center-in: circle(125%);
 $dark-grayish-blue: #303133;
+$bg-color-light: #fff;
+$bg-color-gray: rgb(237 239 243);
+$shadow-color: $bg-color-gray;

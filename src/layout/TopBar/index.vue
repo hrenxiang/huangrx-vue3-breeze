@@ -87,17 +87,12 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   overflow: hidden;
-  padding: 0 24px;
+  padding: 0 $sidebar-padding-lr;
   width: 100%;
-  height: 60px;
-  background: #ebf3ff;
-  border: 1px solid rgb(0 0 0 / 6%);
+  height: $top-bar-height;
   flex-direction: row;
-
-  .topmenu-container {
-    position: absolute;
-    left: 50px;
-  }
+  background-color: $bg-color-light;
+  border-bottom: 1px solid $shadow-color;
 
   .left-menu {
     display: flex;
@@ -111,8 +106,7 @@ onMounted(() => {
     gap: 12px;
 
     .logo {
-      width: 230px;
-      height: 20px;
+      height: $top-bar-height;
     }
   }
 
