@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
-import { onBeforeUnmount, reactive, ref, watch } from 'vue';
+import { markRaw, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import {
   AlignTextBoth,
   AlignTextCenter,
@@ -21,11 +21,13 @@ import {
   LevelFourTitle,
   LevelSixTitle,
   Link as LinkIcon,
+  ListSuccess,
   ListTwo,
   Next,
   OrderedList,
   Pic,
   Quote,
+  Split,
   Strikethrough,
   TextBold,
   TextItalic,
@@ -38,7 +40,16 @@ import { Indent } from '@weiruo/tiptap-extension-indent';
 import { Link } from '@tiptap/extension-link';
 import ImageUpload from '@/components/ImageUpload/index.vue';
 import { UploadUserFile } from 'element-plus';
-import { Image } from '@tiptap/extension-image';
+import { TaskList } from '@tiptap/extension-task-list';
+import { TaskItem } from '@tiptap/extension-task-item';
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
+import { all, createLowlight } from 'lowlight';
+import { Highlight } from '@tiptap/extension-highlight';
+import { Color } from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Heading } from '@tiptap/extension-heading';
+import { Text } from '@tiptap/extension-text';
+import { ImageResize } from '@comp/TipTapEditor/resizableImage.ts';
 
 defineOptions({
   name: 'TipTapEditor',
@@ -53,25 +64,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:content']);
 
-const editor = useEditor({
-  content: '',
-  extensions: [
-    StarterKit,
-    Underline,
-    TextAlign,
-    Indent.configure({
-      types: ['listItem', 'paragraph'],
-      minLevel: 0,
-      maxLevel: 8,
-    }),
-    Link.configure({ openOnClick: true }),
-    Image,
-  ],
-  onUpdate: () => {
-    emit('update:content', editor.value?.getHTML());
-  },
-});
-
 // 监听 content 的变化并更新编辑器内容
 watch(
   () => props.content,
@@ -82,208 +74,369 @@ watch(
   },
 );
 
+// create a lowlight instance
+const lowlight = createLowlight(all);
+
+const color = ref('rgba(0, 0, 0)');
+
+const bgColor = ref('rgba(255, 255, 255)');
+
+const predefineColors = ref([
+  '#ff4500',
+  '#ff8c00',
+  '#ffd700',
+  '#90ee90',
+  '#00ced1',
+  '#1e90ff',
+  '#c71585',
+  'rgba(255, 69, 0, 0.68)',
+  'rgb(255, 120, 0)',
+  'hsv(51, 100, 98)',
+  'hsva(120, 40, 94, 0.5)',
+  'hsl(181, 100%, 37%)',
+  'hsla(209, 100%, 56%, 0.73)',
+  '#c7158577',
+]);
+
 const editorContainer = ref<HTMLElement | null>();
 
 const imgUploadRef = ref();
 
 let isFullScreen = ref<boolean>(false);
 
-onBeforeUnmount(() => {
-  editor.value?.destroy();
+const editor = useEditor({
+  content: '',
+  extensions: [
+    StarterKit,
+    Underline,
+    Text,
+    Heading.configure({
+      levels: [1, 2, 3, 4, 5, 6],
+    }),
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+    }),
+    Indent.configure({
+      types: ['listItem', 'paragraph'],
+      minLevel: 0,
+      maxLevel: 8,
+    }),
+    Link.configure({ openOnClick: true }),
+    // Image,
+    ImageResize,
+    TaskList,
+    TaskItem.configure({
+      nested: true,
+    }),
+    CodeBlockLowlight.configure({
+      lowlight,
+    }),
+    Highlight.configure({ multicolor: true }),
+    TextStyle,
+    Color,
+  ],
+  onUpdate: () => {
+    emit('update:content', editor.value?.getHTML());
+  },
 });
 
 const items = reactive([
   {
-    icon: TextBold,
+    icon: markRaw(TextBold),
     title: '加粗',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleBold().run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('bold'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: TextUnderline,
+    icon: markRaw(TextUnderline),
     title: '下划线',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleUnderline().run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('underline'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: TextItalic,
+    icon: markRaw(TextItalic),
     title: '斜体',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleItalic().run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('italic'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: Strikethrough,
+    icon: markRaw(Strikethrough),
     title: '文本线',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleStrike().run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('strike'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: H1,
+    icon: markRaw(H1),
     title: 'H1',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleHeading({ level: 1 }).run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('heading', { level: 1 }),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: H2,
+    icon: markRaw(H2),
     title: 'H2',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleHeading({ level: 2 }).run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('heading', { level: 2 }),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: H3,
+    icon: markRaw(H3),
     title: 'H3',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleHeading({ level: 3 }).run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('heading', { level: 3 }),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: LevelFourTitle,
+    icon: markRaw(LevelFourTitle),
     title: 'H4',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleHeading({ level: 4 }).run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('heading', { level: 4 }),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: LevelFiveTitle,
+    icon: markRaw(LevelFiveTitle),
     title: 'H5',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleHeading({ level: 5 }).run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('heading', { level: 5 }),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: LevelSixTitle,
+    icon: markRaw(LevelSixTitle),
     title: 'H6',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleHeading({ level: 6 }).run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('heading', { level: 6 }),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: Code,
+    icon: markRaw(Code),
     title: '代码',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleCode().run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('code'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: CodeBrackets,
+    icon: markRaw(CodeBrackets),
     title: '代码块',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleCodeBlock().run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('codeBlock'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: ListTwo,
+    icon: markRaw(ListTwo),
     title: '无序列表',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleBulletList().run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('bulletList'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: OrderedList,
+    icon: markRaw(OrderedList),
     title: '有序列表',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleOrderedList().run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('orderedList'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: AlignTextLeft,
+    icon: markRaw(AlignTextLeft),
     title: '左对齐',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().setTextAlign('left').run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('text-align-left'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: AlignTextRight,
+    icon: markRaw(AlignTextRight),
     title: '右对齐',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().setTextAlign('right').run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('text-align-right'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: AlignTextCenter,
+    icon: markRaw(AlignTextCenter),
     title: '居中对齐',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().setTextAlign('center').run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('text-align-center'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: AlignTextBoth,
+    icon: markRaw(AlignTextBoth),
     title: '两端对齐',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().setTextAlign('justify').run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('text-align-justify'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: IndentLeft,
+    icon: markRaw(IndentLeft),
     title: '减少缩进',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.commands.outdent();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('outdent'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: IndentRight,
+    icon: markRaw(IndentRight),
     title: '增加缩进',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.commands.indent();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('indent'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: Quote,
+    icon: markRaw(Quote),
     title: '引用',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().toggleBlockquote().run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('blockquote'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: LinkIcon,
+    icon: markRaw(LinkIcon),
     title: '添加链接',
     action: (event: MouseEvent) => {
       event.preventDefault();
@@ -305,38 +458,122 @@ const items = reactive([
         .setLink({ href: url })
         .run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('set-link'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: Unlink,
+    icon: markRaw(Unlink),
     title: '取消链接',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().extendMarkRange('link').unsetLink().run();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('unset-link'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: Pic,
+    icon: markRaw(ListSuccess),
+    title: '任务列表',
+    action: (event: MouseEvent) => {
+      event.preventDefault();
+      editor.value?.chain().focus().toggleTaskList().run();
+    },
+    change: () => {},
+    isActive: () => editor.value?.isActive('taskList'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
+  },
+  {
+    icon: markRaw(Split),
+    title: '任务列表子项',
+    action: (event: MouseEvent) => {
+      event.preventDefault();
+      editor.value?.chain().focus().splitListItem('taskItem').run();
+    },
+    change: () => {},
+    isActive: () => editor.value?.isActive('taskList'),
+    disabled: () => !editor.value?.can().sinkListItem('taskItem'),
+    type: 'button',
+  },
+  {
+    icon: markRaw(Split),
+    title: '文字颜色',
+    action: (event: MouseEvent) => {
+      event.preventDefault();
+    },
+    change: (val: string | null) => {
+      console.log(val);
+
+      editor.value?.chain().focus().setColor(color.value).run();
+    },
+    isActive: () => editor.value?.isActive('textStyle', { color: color.value }),
+    disabled: () => {
+      return false;
+    },
+    type: 'color-picker',
+  },
+  {
+    icon: markRaw(Split),
+    title: '高亮',
+    action: (event: MouseEvent) => {
+      event.preventDefault();
+    },
+    change: (val: string | null) => {
+      console.log(val);
+      editor.value
+        ?.chain()
+        .focus()
+        .toggleHighlight({ color: bgColor.value })
+        .run();
+    },
+    isActive: () =>
+      editor.value?.isActive('highlight', { color: bgColor.value }),
+    disabled: () => {
+      return false;
+    },
+    type: 'bg-color-picker',
+  },
+  {
+    icon: markRaw(Pic),
     title: '上传图片',
     action: (event: MouseEvent) => {
       event.preventDefault();
       imgUploadRef.value?.triggerUpload();
     },
+    change: () => {},
     isActive: () => editor.value?.isActive('upload-image'),
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: ClearFormat,
+    icon: markRaw(ClearFormat),
     title: '清除格式',
     action: (event: MouseEvent) => {
       event.preventDefault();
       editor.value?.chain().focus().unsetAllMarks().run();
       editor.value?.chain().focus().clearNodes().run();
     },
+    change: () => {},
     isActive: () => false,
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: Back,
+    icon: markRaw(Back),
     title: '撤销',
     action: (event: MouseEvent) => {
       event.preventDefault();
@@ -344,10 +581,15 @@ const items = reactive([
         editor.value?.chain().undo().run();
       }
     },
+    change: () => {},
     isActive: () => false,
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: Next,
+    icon: markRaw(Next),
     title: '重做',
     action: (event: MouseEvent) => {
       event.preventDefault();
@@ -355,16 +597,26 @@ const items = reactive([
         editor.value?.chain().redo().run();
       }
     },
+    change: () => {},
     isActive: () => false,
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
   {
-    icon: FullScreenOne,
+    icon: markRaw(FullScreenOne),
     title: '全屏',
     action: (event: MouseEvent) => {
       event.preventDefault();
       isFullScreen.value = !isFullScreen.value;
     },
+    change: () => {},
     isActive: () => false,
+    disabled: () => {
+      return false;
+    },
+    type: 'button',
   },
 ]);
 
@@ -382,6 +634,10 @@ const handleImgUploadComplete = (
       .run();
   }
 };
+
+onBeforeUnmount(() => {
+  editor.value?.destroy();
+});
 </script>
 
 <template>
@@ -392,12 +648,49 @@ const handleImgUploadComplete = (
     :class="{ fullscreen: isFullScreen }"
   >
     <div class="editor-control-group">
-      <span v-for="(item, i) in items" :key="i">
-        <el-button
-          @click="item.action"
-          :class="item.isActive() ? 'is-active' : ''"
-          :icon="item.icon"
-        />
+      <span v-for="(item, i) in items" :key="i" class="editor-control-item">
+        <el-tooltip
+          class="box-item"
+          effect="light"
+          :content="item.title"
+          placement="top"
+          popper-append-to-body
+        >
+          <template v-if="item.type === undefined || item.type === 'button'">
+            <el-button
+              @click="item.action"
+              :class="item.isActive() ? 'is-active' : ''"
+              :icon="item.icon"
+              :disabled="item.disabled === undefined ? false : item.disabled()"
+            />
+          </template>
+
+          <template v-else-if="item.type === 'color-picker'">
+            <span>
+              <el-color-picker
+                v-model="color"
+                show-alpha
+                :predefine="predefineColors"
+                @change="item.change"
+                :class="item.isActive() ? 'is-active' : ''"
+                :icon="item.icon"
+              />
+            </span>
+          </template>
+
+          <template v-else-if="item.type === 'bg-color-picker'">
+            <span>
+              <el-color-picker
+                v-model="bgColor"
+                show-alpha
+                :predefine="predefineColors"
+                @change="item.change"
+                :class="item.isActive() ? 'is-active' : ''"
+                :icon="item.icon"
+              />
+            </span>
+          </template>
+        </el-tooltip>
       </span>
     </div>
     <editor-content class="editor-content" :editor="editor" />
@@ -451,6 +744,11 @@ const handleImgUploadComplete = (
   }
 }
 
+.editor-control-item {
+  display: flex;
+  align-items: center;
+}
+
 .editor-content {
   overflow: auto;
 }
@@ -469,6 +767,10 @@ const handleImgUploadComplete = (
   /* 针对 Firefox 浏览器滚动条 */
   scrollbar-width: none;
 
+  :first-child {
+    margin-top: 0;
+  }
+
   ul,
   ol {
     padding: 0 1rem;
@@ -480,6 +782,41 @@ const handleImgUploadComplete = (
     }
   }
 
+  /* Task list specific styles */
+  ul[data-type='taskList'] {
+    padding: 0;
+    margin-left: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+
+      > label {
+        flex: 0 0 auto;
+        margin-right: 0.5rem;
+        user-select: none;
+      }
+
+      > div {
+        flex: 1 1 auto;
+      }
+    }
+
+    li[data-checked='true'] {
+      color: $bg-color-gray-2;
+    }
+
+    input[type='checkbox'] {
+      cursor: pointer;
+    }
+
+    ul[data-type='taskList'] {
+      margin: 0;
+    }
+  }
+
+  /* Heading styles */
   h1,
   h2,
   h3,
@@ -487,49 +824,77 @@ const handleImgUploadComplete = (
   h5,
   h6 {
     line-height: 1.1;
-    margin-top: 2rem;
-    margin-bottom: 1.5rem;
+    margin-top: 2.5rem;
     text-wrap: pretty;
   }
 
-  h1 {
-    font-size: 1.6rem;
+  h1,
+  h2 {
+    margin-top: 3.5rem;
+    margin-bottom: 1.5rem;
   }
 
-  h2 {
+  h1 {
     font-size: 1.4rem;
   }
 
-  h3 {
+  h2 {
     font-size: 1.2rem;
   }
 
-  h4 {
+  h3 {
     font-size: 1.1rem;
   }
 
-  h5 {
+  h4,
+  h5,
+  h6 {
     font-size: 1rem;
   }
 
-  h6 {
-    font-size: 0.9rem;
+  blockquote {
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    border-left: 3px solid $bg-color-gray-2;
   }
 
+  hr {
+    margin: 2rem 0;
+    border: none;
+    border-top: 1px solid $bg-color-gray-2;
+  }
+
+  p {
+    margin-bottom: 8px;
+  }
+
+  a {
+    padding: 5px;
+    margin: 0 2px;
+    text-decoration: none;
+    color: $primary-color;
+    font-weight: bold;
+  }
+
+  a:hover {
+    cursor: pointer;
+  }
+
+  /* code style */
   code {
     padding: 0.25em 0.3em;
     font-size: 0.85rem;
-    color: var(--black);
-    background-color: var(--el-color-primary);
+    color: $bg-color-dark;
+    background-color: $bg-color-gray;
     border-radius: 0.4rem;
   }
 
+  /* code block style */
   pre {
     padding: 0.75rem 1rem;
     margin: 1.5rem 0;
-    font-family: pingfang-sc-regular, monospace;
-    color: white;
-    background: black;
+    color: $bg-color-light;
+    background: $bg-color-dark;
     border-radius: 0.5rem;
 
     code {
@@ -538,34 +903,65 @@ const handleImgUploadComplete = (
       color: inherit;
       background: none;
     }
+
+    /* Code styling */
+    .hljs-comment,
+    .hljs-quote {
+      color: #616161;
+    }
+
+    .hljs-variable,
+    .hljs-template-variable,
+    .hljs-attribute,
+    .hljs-tag,
+    .hljs-regexp,
+    .hljs-link,
+    .hljs-name,
+    .hljs-selector-id,
+    .hljs-selector-class {
+      color: #f98181;
+    }
+
+    .hljs-number,
+    .hljs-meta,
+    .hljs-built_in,
+    .hljs-builtin-name,
+    .hljs-literal,
+    .hljs-type,
+    .hljs-params {
+      color: #fbbc88;
+    }
+
+    .hljs-string,
+    .hljs-symbol,
+    .hljs-bullet {
+      color: #b9f18d;
+    }
+
+    .hljs-title,
+    .hljs-section {
+      color: #faf594;
+    }
+
+    .hljs-keyword,
+    .hljs-selector-tag {
+      color: #70cff8;
+    }
+
+    .hljs-emphasis {
+      font-style: italic;
+    }
+
+    .hljs-strong {
+      font-weight: 700;
+    }
   }
 
-  blockquote {
-    padding-left: 1rem;
-    margin: 1.5rem 0;
-    border-left: 3px solid gray;
-  }
-
-  hr {
-    margin: 2rem 0;
-    border: none;
-    border-top: 1px solid gray;
-  }
-
-  a {
-    padding: 5px;
-    margin: 0 2px;
-    text-decoration: none;
-    color: var(--el-color-primary);
-    font-weight: bold;
-  }
-
-  a:hover {
-    cursor: pointer;
-  }
-
-  p {
-    margin-bottom: 8px;
+  /* 缩进样式 */
+  @for $i from 1 through 8 {
+    .tt-indent-#{$i} {
+      padding-left: $i * 3rem;
+    }
   }
 }
 
@@ -576,5 +972,11 @@ const handleImgUploadComplete = (
 
 :deep(.ProseMirror-focused) {
   outline: none;
+}
+
+:deep(.el-color-picker__trigger) {
+  width: 24px;
+  height: 24px;
+  border: none;
 }
 </style>

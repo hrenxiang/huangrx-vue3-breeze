@@ -98,21 +98,9 @@ const clickItemHandle = (item: MenuItem) => {
 
 <style scoped lang="scss">
 .el-menu {
-  position: fixed;
-  overflow: auto;
-  padding: $top-bar-height $sidebar-padding-lr 0 $sidebar-padding-lr;
+  border-right: none !important;
   min-width: $sidebar-width;
   max-width: $sidebar-width;
-  height: 100vh;
-  border-right: none !important;
-
-  /* 针对 Firefox 浏览器滚动条 */
-  scrollbar-width: none;
-
-  /* 针对 WebKit 浏览器（如 Chrome, Safari, Edge） */
-  ::-webkit-scrollbar {
-    display: none;
-  }
 
   &-item {
     z-index: 2 !important;

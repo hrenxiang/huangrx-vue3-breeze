@@ -3,6 +3,7 @@ import Layout from '@/layout/index.vue';
 import { setGuards } from '@/router/guard.ts';
 import Login from '@/views/Login/index.vue';
 import Index from '@/views/Index/index.vue';
+import TipTap from '@/views/TipTap/index.vue';
 
 const router = createRouter({
   // history 模式 不带 #
@@ -17,6 +18,11 @@ const router = createRouter({
           name: 'Index',
           path: '/index',
           component: Index,
+        },
+        {
+          name: 'TipTap',
+          path: '/richText/tipTap',
+          component: TipTap,
         },
       ],
     },

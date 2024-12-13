@@ -21,6 +21,10 @@ const isCached = ref([]);
 .app-main {
   padding: $sidebar-padding-lr;
   width: 100%;
+
+  &-card {
+    height: 100%;
+  }
 }
 
 .fade-enter-active,

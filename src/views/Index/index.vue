@@ -5,5 +5,5 @@ defineOptions({
 </script>
 
 <template>
-  <el-card style="min-height: 100%" />
+  <el-card class="app-main-card" />
 </template>
