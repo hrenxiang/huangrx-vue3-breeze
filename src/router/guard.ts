@@ -2,7 +2,7 @@ import { closeProgress, startProgress } from '@comp/Nprogress/index.ts';
 import { getToken } from '@/utils/auth.ts';
 import { Router } from 'vue-router';
 
-const whiteList = ['/login', '/index', '/richText/tipTap'];
+const whiteList = ['/login', '/index', '/richText/tipTap', '/upload/image'];
 
 export const setGuards = (router: Router) => {
   // 全局前置守卫：用于在路由跳转前进行处理

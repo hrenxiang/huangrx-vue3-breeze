@@ -1,4 +1,4 @@
-import { Edit, Home } from '@icon-park/vue-next';
+import { Edit, Home, UploadTwo } from '@icon-park/vue-next';
 import { MenuItem } from '@/types/base';
 import { markRaw } from 'vue';
 
@@ -27,6 +27,41 @@ const menuData: MenuItem[] = [
         name: 'TipTap',
         level: '1-1',
         path: '/richText/tipTap',
+        meta: {},
+        child: [],
+      },
+    ],
+  },
+  {
+    id: '3',
+    name: 'Upload',
+    level: '1',
+    path: '',
+    meta: {
+      icon: markRaw(UploadTwo),
+    },
+    child: [
+      {
+        id: '31',
+        name: 'Upload Image',
+        level: '1-1',
+        path: '/upload/image',
+        meta: {},
+        child: [],
+      },
+      {
+        id: '32',
+        name: 'Upload File',
+        level: '1-1',
+        path: '/upload/file',
+        meta: {},
+        child: [],
+      },
+      {
+        id: '33',
+        name: 'Upload Video',
+        level: '1-1',
+        path: '/upload/video',
         meta: {},
         child: [],
       },
