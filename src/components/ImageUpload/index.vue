@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { getToken } from '@/utils/auth';
 import { BaseResponse, FileVO } from '@/types/base';
-import { reactive, ref, watch } from 'vue';
+import { PropType, reactive, ref, watch } from 'vue';
 import {
-  ElMessage,
   UploadFile,
   UploadFiles,
   UploadProgressEvent,
@@ -13,6 +12,8 @@ import IconPackComponent from '@/components/IconPack/index.vue';
 import { Calendar, CloseSmall, NewPicture, Plus } from '@icon-park/vue-next';
 import { normDateFormat } from '@/utils/date.ts';
 import ImageViewer from '@/components/ImageViewer/index.vue';
+import { errorMsg } from '@/utils/message.ts';
+import { networkSuccessCode } from '@/api/base/errorMessages.ts';
 
 defineOptions({
   name: 'ImageUpload',
@@ -42,6 +43,10 @@ const props = defineProps({
         type: '',
       };
     },
+  },
+  originalItem: {
+    type: Object as PropType<FileVO>,
+    default: null,
   },
   // 列表
   originalList: {
@@ -75,35 +80,41 @@ const uploadFileUrl = import.meta.env.VITE_APP_BASE_FILE_UPLOAD_URL;
 
 const headers = { Authorization: `Bearer ${getToken()}` };
 
-const isLoad = ref<boolean>(false);
+const isInitialLoad = ref<boolean>(true);
+
+// 监听 originalItem 的变化
+watch(
+  () => props.originalItem,
+  (newOriginalItem) => {
+    if (isInitialLoad.value && newOriginalItem) {
+      fileList.push({
+        uid: Date.now(),
+        fileId: newOriginalItem.fileId,
+        name: newOriginalItem.fileName,
+        url: newOriginalItem.filePath,
+        createTime: newOriginalItem.uploadTime,
+      });
+      isInitialLoad.value = false; // 防止之后再处理 props 变化
+    }
+  },
+  { immediate: true, deep: true },
+);
 
 // 监听 originalList 的变化
 watch(
   () => props.originalList,
   (newOriginalList) => {
-    // 如果 originalList 有值，就复制到 fileList 中
-    if (!isLoad.value) {
+    if (isInitialLoad.value && newOriginalList?.length) {
       newOriginalList.forEach((item) => {
-        if (item && item.fileId) {
-          fileList.push({
-            name: item.fileName,
-            url: item.filePath,
-            createTime: item.uploadTime,
-            uid: Date.now(),
-          });
-          isLoad.value = true;
-        }
-
-        if (!item.fileId && item.filePath) {
-          fileList.push({
-            name: item.fileName,
-            url: item.filePath,
-            createTime: item.uploadTime,
-            uid: Date.now(),
-          });
-          isLoad.value = true;
-        }
+        fileList.push({
+          uid: Date.now(),
+          fileId: item.fileId,
+          name: item.fileName,
+          url: item.filePath,
+          createTime: item.uploadTime,
+        });
       });
+      isInitialLoad.value = false; // 防止之后再处理 props 变化
     }
   },
   { immediate: true, deep: true },
@@ -111,6 +122,7 @@ watch(
 
 // 上传前校检格式和大小
 const handleBeforeUpload = (file: File) => {
+  console.log(uploadFileUrl);
   // 校检文件类型
   if (props.fileType) {
     const fileName = file.name.split('.');
@@ -119,11 +131,7 @@ const handleBeforeUpload = (file: File) => {
       (type) => type.toLowerCase() === fileExt,
     );
     if (!isTypeOk) {
-      ElMessage({
-        type: 'error',
-        message: `文件格式不正确, 请上传${props.fileType.join('、')}格式文件！`,
-        grouping: true,
-      });
+      errorMsg(`文件格式不正确, 请上传${props.fileType.join('、')}格式文件！`);
       return false;
     }
   }
@@ -132,35 +140,23 @@ const handleBeforeUpload = (file: File) => {
   if (props.fileSize) {
     const isLt = file.size / 1024 / 1024 < props.fileSize / 1;
     if (!isLt) {
-      ElMessage({
-        type: 'error',
-        message: `上传文件大小不能超过 ${props.fileSize} MB！`,
-        grouping: true,
-      });
+      errorMsg(`上传文件大小不能超过 ${props.fileSize} MB！`);
       return false;
     }
   }
 
-  // TODO: 加载动画
+  // 校验成功
   return true;
 };
 
-// 文件个数超出
+// 上传超过限制
 const handleExceed = () => {
-  ElMessage({
-    type: 'error',
-    message: `上传文件数量不能超过 ${props.limit} 个！`,
-    grouping: true,
-  });
+  errorMsg(`上传文件数量不能超过 ${props.limit} 个！`);
 };
 
 // 上传失败
-const handleUploadError = () => {
-  ElMessage({
-    type: 'error',
-    message: '文件上传失败，请重试！',
-    grouping: true,
-  });
+const handleUploadError = (error: Error) => {
+  errorMsg(`文件上传失败: ${error.message}，请重试！`);
 };
 
 // 上传成功处理
@@ -168,21 +164,18 @@ const handleUploadSuccess = (
   res: BaseResponse<FileVO>,
   uploadFile: UploadFile,
 ) => {
-  if (res.code === 200) {
+  if (res.code === networkSuccessCode) {
     fileList.push({
       ...uploadFile,
-      url: res.data.filePath,
       fileId: res.data.fileId,
+      name: res.data.fileName,
+      url: res.data.filePath,
       createTime: normDateFormat(res.data.uploadTime),
     });
     emit('upload-complete', fileList);
     handleRemoveFile(uploadFile);
   } else {
-    ElMessage({
-      type: 'error',
-      message: res.message,
-      grouping: true,
-    });
+    errorMsg(res.message);
   }
 };
 
@@ -204,7 +197,7 @@ const handleRemoveFile = (file: UploadUserFile) => {
   emit('upload-complete', fileList);
 };
 
-// 上传进度
+// 监听上传进度
 const handleProgress = (evt: UploadProgressEvent) => {
   uploadPercent.value = Math.floor(evt.percent);
   if (uploadPercent.value >= 100) {
@@ -215,6 +208,7 @@ const handleProgress = (evt: UploadProgressEvent) => {
   }
 };
 
+// 模拟点击文件上传按钮，触发上传操作
 const triggerUpload = () => {
   fileUpload.value.$el.querySelector('input').click();
 };
@@ -225,7 +219,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="upload-file">
+  <div class="upload-image-wrapper">
     <el-upload
       :multiple="false"
       :data="addition"
@@ -240,44 +234,44 @@ defineExpose({
       :on-progress="handleProgress"
       :show-file-list="false"
       :headers="headers"
-      class="upload-file-uploader"
+      class="upload-image-body"
       ref="fileUpload"
       drag
     >
-      <div class="el-upload__btn">
+      <div class="upload-image-plus">
         <icon-pack-component :icon="Plus" />
       </div>
     </el-upload>
 
     <!--  文件上传列表  -->
-    <div class="upload-file-list">
+    <div class="upload-image-list">
       <div
         v-for="file in fileList"
         :key="file.fileId"
-        class="upload-file-list__item"
+        class="upload-image-item"
       >
-        <div class="upload-file-list__item-image">
+        <div class="upload-image-item__img">
           <image-viewer :image-url="file.url" :icon-size="32" />
         </div>
 
-        <div class="upload-file-list__item-desc">
+        <div class="upload-image-item__desc">
           <el-tooltip
             :content="file.name"
             placement="top"
             :disabled="!file.name"
           >
-            <span class="upload-file-list__item-name">
+            <span class="upload-image-item__name">
               <icon-pack-component :icon="NewPicture" />
               {{ file.name || '--' }}
             </span>
           </el-tooltip>
-          <span class="upload-file-list__item-time">
+          <span class="upload-image-item__time">
             <icon-pack-component :icon="Calendar" />
             {{ file.createTime || '--' }}
           </span>
         </div>
 
-        <div class="upload-file-list__item-btn" @click="handleRemoveFile(file)">
+        <div class="upload-image-item__remove" @click="handleRemoveFile(file)">
           <el-link :underline="false" type="info">
             <icon-pack-component :icon="CloseSmall" />
           </el-link>
@@ -285,14 +279,14 @@ defineExpose({
       </div>
     </div>
 
-    <div class="el-upload__tip">
+    <div class="upload-image-tip">
       <template>请上传清晰且无遮挡、涂抹的文件。</template>
       <br />
-      <template v-if="props.fileType"
-        >格式支持{{ props.fileType.join('、').toUpperCase() }}，
+      <template v-if="props.fileType">
+        格式支持{{ props.fileType.join('、').toUpperCase() }}，
       </template>
-      <template v-if="props.fileSize / 1"
-        >文件大小{{ props.fileSize }}MB以内
+      <template v-if="props.fileSize / 1">
+        文件大小{{ props.fileSize }}MB以内
       </template>
     </div>
   </div>

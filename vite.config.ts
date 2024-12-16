@@ -5,7 +5,6 @@ import { fileURLToPath, URL } from 'node:url';
 // https://vite.dev/config/
 export default defineConfig((config) => {
   const currentEnv = loadEnv(config.mode, process.cwd(), '');
-
   return {
     plugins: [vue()],
     resolve: {
@@ -17,13 +16,13 @@ export default defineConfig((config) => {
     css: {
       preprocessorOptions: {
         scss: {
-          // api: 'modern-compiler', // 使用现代编译器
-          additionalData: '@use "@/styles/variable.scss" as *;',
+          api: 'modern-compiler', // 使用现代编译器
+          additionalData: `@use "@/styles/variable.scss" as *;`,
         },
       },
     },
     server: {
-      port: 3000,
+      port: 5173,
       proxy: {
         '/api': {
           target: currentEnv.VITE_APP_BASE_URL,

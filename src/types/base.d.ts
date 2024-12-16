@@ -23,12 +23,14 @@ export interface FileVO {
    * 文件地址
    */
   filePath: string;
-  index?: string;
   /**
    * 上传时间
    */
   uploadTime: string;
-  duration?: number;
+  /**
+   * 分片上传时，服务端返回的是否终结标识
+   */
+  index?: string;
 }
 
 export interface BaseResponse<T> {

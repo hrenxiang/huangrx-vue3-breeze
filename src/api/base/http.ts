@@ -4,8 +4,11 @@ import {
   handleChangeRequestHeader,
   handleNetworkError,
 } from '@/api/base/tool.ts';
-import { ElMessage } from 'element-plus';
 import { IAnyObj } from '@/types/base';
+import { authErrMap, networkSuccessCode } from '@/api/base/errorMessages.ts';
+import { errorMsg } from '@/utils/message.ts';
+import router from '@/router';
+import { removeToken } from '@/utils/auth.ts';
 
 // 基础配置
 const baseURL = import.meta.env.VITE_APP_BASE_API;
@@ -35,24 +38,20 @@ request.interceptors.response.use(
       return response;
     }
 
-    if (response.data.code !== 200) {
-      ElMessage({
-        message: response.data.message,
-        grouping: true,
-        type: 'error',
-      });
-
+    if (response.data.code !== networkSuccessCode) {
+      errorMsg(response.data.message);
+      const isAuthError = authErrMap[response.data.code];
+      if (isAuthError) {
+        removeToken();
+        router.push('/login');
+      }
       return Promise.reject(response);
     }
     return response;
   },
   (err) => {
     err.response.statusText = handleNetworkError(err.response.status);
-    ElMessage({
-      message: err.response.statusText,
-      grouping: true,
-      type: 'error',
-    });
+    errorMsg(err.response.statusText);
     return Promise.reject(err.response);
   },
 );
