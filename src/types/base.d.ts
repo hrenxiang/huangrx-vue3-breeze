@@ -7,6 +7,42 @@ export interface TokenPayload {
   userId: string;
 }
 
+export interface LoginDTO extends IAnyObj {
+  username: string;
+  password: string;
+  loginType: 'normal' | 'refresh_token';
+}
+
+export interface LoginVO {
+  token: TokenDTO;
+  user: LoginUserVO;
+}
+
+export interface TokenDTO extends IAnyObj {
+  accessToken: string;
+  refreshToken: string;
+  expire: string;
+}
+
+export interface LoginUserVO {
+  userInfo: UserVO;
+  roleKey: string;
+  permissions: string[];
+}
+
+export interface UserVO {
+  userId: string;
+  username: string;
+  nickname: string;
+  userType: number;
+  email: string;
+  phoneNumber: string;
+  sex: number;
+  avatar: string;
+  status: number;
+  loginIp: string;
+}
+
 /**
  * FileVO
  */
@@ -33,7 +69,7 @@ export interface FileVO {
   index?: string;
 }
 
-export interface BaseResponse<T> {
+export interface ResponseDTO<T> {
   code: number;
   message: string;
   data: T;

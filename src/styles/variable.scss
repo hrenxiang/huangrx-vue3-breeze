@@ -24,7 +24,11 @@ $bg-color-gray: rgb(237 239 243);
 $bg-color-gray-2: #b4b4b8;
 $primary-color: #1a77ff;
 $shadow-color: $bg-color-gray;
+$morning-mist-blue: #cfd9df;
 $gradient-light-blue: (
   color: #8bc6ec,
   gradient: linear-gradient(135deg, #8bc6ec 0%, #9599e2 100%),
+);
+$gradient-heavy-rain: (
+  gradient: linear-gradient(to top, $morning-mist-blue 0%, #e2ebf0 100%),
 );

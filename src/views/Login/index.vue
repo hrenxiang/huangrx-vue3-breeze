@@ -1,29 +1,51 @@
 <script setup lang="ts">
-import Logo from '@/assets/logo/logo-text.png';
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
+import { LoginDTO } from '@/types/base';
+import { FormInstance, FormRules } from 'element-plus';
+import { authApi } from '@/api/business/auth.ts';
+import { successMsg } from '@/utils/message.ts';
+import { setRefreshToken, setToken } from '@/utils/auth.ts';
+import router from '@/router';
 
 defineOptions({
   name: 'Login',
 });
 
-let loginForm = reactive({
+const loginFormRef = ref<FormInstance>();
+
+let loginForm = reactive<LoginDTO>({
   username: '',
   password: '',
-  loginType: '',
+  loginType: 'normal',
 });
+
+const rules = reactive<FormRules>({
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+});
+
+const login = () => {
+  loginFormRef.value?.validate((valid) => {
+    if (valid) {
+      authApi.doLogin(loginForm).then((res) => {
+        setToken(res.data.token.accessToken);
+        setRefreshToken(res.data.token.refreshToken);
+        successMsg('登录成功！');
+        router.push({ path: '/index' });
+      });
+    }
+  });
+};
 </script>
 
 <template>
   <div class="login-wrapper">
     <el-card class="login-card">
       <div class="login-card-header">
-        <div class="login-card-header__logo">
-          <el-image :src="Logo" mode="aspectFill" />
-        </div>
         <span class="login-card-title">Welcome</span>
       </div>
       <div class="login-card-form">
-        <el-form :model="loginForm">
+        <el-form :model="loginForm" :rules="rules" ref="loginFormRef">
           <el-form-item label="" prop="email">
             <el-input
               class="login-card-form__input"
@@ -41,7 +63,7 @@ let loginForm = reactive({
         </el-form>
       </div>
       <div class="login-card-btn__wrapper">
-        <button class="login-card-btn">Let`s go →</button>
+        <button class="login-card-btn" @click="login">Let`s go →</button>
       </div>
     </el-card>
   </div>
@@ -54,10 +76,11 @@ let loginForm = reactive({
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
   width: 100vw;
   height: 100vh;
-  background-color: map.get($gradient-light-blue, color);
-  background-image: map.get($gradient-light-blue, gradient);
+  background-image: map.get($gradient-heavy-rain, gradient);
+  user-select: none; /* 禁止选择文本 */
 
   .login-card {
     width: 28rem;
@@ -111,7 +134,7 @@ let loginForm = reactive({
         }
 
         :deep(.el-input__wrapper.is-focus) {
-          border: 2px solid $primary-color;
+          background-color: rgba($morning-mist-blue, 0.3);
         }
       }
     }
@@ -132,46 +155,17 @@ let loginForm = reactive({
         font-family: pingfang-sc-medium, sans-serif;
         background: transparent;
         border-radius: 5px;
-        box-shadow: 4px 4px $bg-color-dark;
+        box-shadow: 0 4px 0 $bg-color-dark;
+        transition: transform 0.1s ease;
+        transform: skew(-10deg);
         cursor: pointer;
       }
 
-      .login-card-btn::before {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 0;
-        height: 2px;
-        background-color: $primary-color;
-        transition: 0.5s ease;
-        content: '';
-      }
-
-      .login-card-btn:hover {
-        color: $bg-color-dark;
-        transition-delay: 0.5s;
-      }
-
-      .login-card-btn:hover::before {
-        width: 100%;
-      }
-
-      .login-card-btn::after {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        z-index: -1;
-        width: 100%;
-        height: 0;
-        background-color: $primary-color;
-        transition: 0.4s ease;
-        content: '';
-      }
-
-      .login-card-btn:hover::after {
-        height: 100%;
-        transition-delay: 0.4s;
-        color: $bg-color-light;
+      .login-card-btn:active {
+        letter-spacing: 0;
+        transform: skew(-10deg) translateY(8px);
+        box-shadow: 0 0 $bg-color-dark;
+        transition: none;
       }
     }
   }
