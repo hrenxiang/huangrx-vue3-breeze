@@ -22,6 +22,7 @@ watch(
   (newImageUrl) => {
     resultPath.value =
       import.meta.env.VITE_APP_BASE_FILE_DOWNLOAD_URL + newImageUrl;
+    console.log(resultPath.value);
   },
   { immediate: true, deep: true },
 );

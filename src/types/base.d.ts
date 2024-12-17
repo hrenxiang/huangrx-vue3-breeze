@@ -50,7 +50,7 @@ export interface FileVO {
   /**
    * 文件ID
    */
-  fileId: string;
+  id: string;
   /**
    * 文件名称
    */
@@ -62,7 +62,7 @@ export interface FileVO {
   /**
    * 上传时间
    */
-  uploadTime: string;
+  createTime: string;
   /**
    * 分片上传时，服务端返回的是否终结标识
    */

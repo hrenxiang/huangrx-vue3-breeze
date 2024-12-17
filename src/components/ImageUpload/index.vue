@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { getToken } from '@/utils/auth';
-import { BaseResponse, FileVO } from '@/types/base';
+import { FileVO, ResponseDTO } from '@/types/base';
 import { PropType, reactive, ref, watch } from 'vue';
 import {
   UploadFile,
   UploadFiles,
-  UploadProgressEvent,
+  UploadRequestOptions,
   UploadUserFile,
 } from 'element-plus';
 import IconPackComponent from '@/components/IconPack/index.vue';
@@ -14,6 +14,7 @@ import { normDateFormat } from '@/utils/date.ts';
 import ImageViewer from '@/components/ImageViewer/index.vue';
 import { errorMsg } from '@/utils/message.ts';
 import { networkSuccessCode } from '@/api/base/errorMessages.ts';
+import { fileApi } from '@/api/business/file.ts';
 
 defineOptions({
   name: 'ImageUpload',
@@ -72,12 +73,6 @@ const emit = defineEmits(['upload-complete']);
 
 let fileList = reactive<CustomUploadFile[]>([]);
 
-let uploadPercent = ref<number>(0);
-
-let progressFlag = ref<boolean>(true);
-
-const uploadFileUrl = import.meta.env.VITE_APP_BASE_FILE_UPLOAD_URL;
-
 const headers = { Authorization: `Bearer ${getToken()}` };
 
 const isInitialLoad = ref<boolean>(true);
@@ -89,10 +84,10 @@ watch(
     if (isInitialLoad.value && newOriginalItem) {
       fileList.push({
         uid: Date.now(),
-        fileId: newOriginalItem.fileId,
+        fileId: newOriginalItem.id,
         name: newOriginalItem.fileName,
         url: newOriginalItem.filePath,
-        createTime: newOriginalItem.uploadTime,
+        createTime: newOriginalItem.createTime,
       });
       isInitialLoad.value = false; // 防止之后再处理 props 变化
     }
@@ -108,10 +103,10 @@ watch(
       newOriginalList.forEach((item) => {
         fileList.push({
           uid: Date.now(),
-          fileId: item.fileId,
+          fileId: item.id,
           name: item.fileName,
           url: item.filePath,
-          createTime: item.uploadTime,
+          createTime: item.createTime,
         });
       });
       isInitialLoad.value = false; // 防止之后再处理 props 变化
@@ -122,7 +117,6 @@ watch(
 
 // 上传前校检格式和大小
 const handleBeforeUpload = (file: File) => {
-  console.log(uploadFileUrl);
   // 校检文件类型
   if (props.fileType) {
     const fileName = file.name.split('.');
@@ -154,26 +148,46 @@ const handleExceed = () => {
   errorMsg(`上传文件数量不能超过 ${props.limit} 个！`);
 };
 
+// 自定义上传逻辑
+const handleUploadFile = (options: UploadRequestOptions): Promise<unknown> => {
+  const formData = new FormData();
+  formData.append('file', options.file);
+
+  return new Promise((resolve, reject) => {
+    fileApi
+      .uploadFile(props.addition.type, formData)
+      .then((res) => {
+        resolve(res);
+      })
+      .catch((error) => {
+        reject(error);
+      });
+  });
+};
+
 // 上传失败
 const handleUploadError = (error: Error) => {
-  errorMsg(`文件上传失败: ${error.message}，请重试！`);
+  console.log(error.message);
+  let response = JSON.parse(error.message) as ResponseDTO<string>;
+  console.log(response?.code);
+  errorMsg(response.message);
 };
 
 // 上传成功处理
 const handleUploadSuccess = (
-  res: BaseResponse<FileVO>,
+  res: ResponseDTO<FileVO>,
   uploadFile: UploadFile,
 ) => {
+  console.log(res);
   if (res.code === networkSuccessCode) {
     fileList.push({
       ...uploadFile,
-      fileId: res.data.fileId,
+      fileId: res.data.id,
       name: res.data.fileName,
       url: res.data.filePath,
-      createTime: normDateFormat(res.data.uploadTime),
+      createTime: normDateFormat(res.data.createTime),
     });
     emit('upload-complete', fileList);
-    handleRemoveFile(uploadFile);
   } else {
     errorMsg(res.message);
   }
@@ -197,17 +211,6 @@ const handleRemoveFile = (file: UploadUserFile) => {
   emit('upload-complete', fileList);
 };
 
-// 监听上传进度
-const handleProgress = (evt: UploadProgressEvent) => {
-  uploadPercent.value = Math.floor(evt.percent);
-  if (uploadPercent.value >= 100) {
-    uploadPercent.value = 100;
-    setTimeout(() => {
-      progressFlag.value = false;
-    }, 1000);
-  }
-};
-
 // 模拟点击文件上传按钮，触发上传操作
 const triggerUpload = () => {
   fileUpload.value.$el.querySelector('input').click();
@@ -221,22 +224,21 @@ defineExpose({
 <template>
   <div class="upload-image-wrapper">
     <el-upload
+      drag
       :multiple="false"
+      :show-file-list="false"
+      ref="fileUpload"
+      class="upload-image-body"
       :data="addition"
-      :action="uploadFileUrl"
-      :before-upload="handleBeforeUpload"
       :file-list="fileList"
       :limit="limit"
-      :on-error="handleUploadError"
+      :before-upload="handleBeforeUpload"
       :on-exceed="handleExceed"
+      :http-request="handleUploadFile"
+      :on-error="handleUploadError"
       :on-success="handleUploadSuccess"
       :on-remove="handleRemove"
-      :on-progress="handleProgress"
-      :show-file-list="false"
       :headers="headers"
-      class="upload-image-body"
-      ref="fileUpload"
-      drag
     >
       <div class="upload-image-plus">
         <icon-pack-component :icon="Plus" />
