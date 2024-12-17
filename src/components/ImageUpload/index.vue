@@ -160,17 +160,14 @@ const handleUploadFile = (options: UploadRequestOptions): Promise<unknown> => {
         resolve(res);
       })
       .catch((error) => {
-        reject(error);
+        reject({ message: error.message });
       });
   });
 };
 
 // 上传失败
 const handleUploadError = (error: Error) => {
-  console.log(error.message);
-  let response = JSON.parse(error.message) as ResponseDTO<string>;
-  console.log(response?.code);
-  errorMsg(response.message);
+  console.log('上传失败：', error.message);
 };
 
 // 上传成功处理
@@ -178,7 +175,6 @@ const handleUploadSuccess = (
   res: ResponseDTO<FileVO>,
   uploadFile: UploadFile,
 ) => {
-  console.log(res);
   if (res.code === networkSuccessCode) {
     fileList.push({
       ...uploadFile,

@@ -1,14 +1,12 @@
 // src/api/http.ts
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import {
+  handleAuthError,
   handleChangeRequestHeader,
   handleNetworkError,
 } from '@/api/base/tool.ts';
 import { IAnyObj } from '@/types/base';
-import { authErrMap, networkSuccessCode } from '@/api/base/errorMessages.ts';
-import { errorMsg } from '@/utils/message.ts';
-import router from '@/router';
-import { removeToken } from '@/utils/auth.ts';
+import { networkSuccessCode } from '@/api/base/errorMessages.ts';
 
 // 基础配置
 const baseURL = import.meta.env.VITE_APP_BASE_API;
@@ -23,7 +21,9 @@ const request = axios.create({
 
 // 请求拦截器：处理请求头
 request.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => handleChangeRequestHeader(config),
+  async (config: InternalAxiosRequestConfig) => {
+    return await handleChangeRequestHeader(config);
+  },
   (error) => Promise.reject(error),
 );
 
@@ -39,19 +39,13 @@ request.interceptors.response.use(
     }
 
     if (response.data.code !== networkSuccessCode) {
-      errorMsg(response.data.message);
-      const isAuthError = authErrMap[response.data.code];
-      if (isAuthError) {
-        removeToken();
-        router.push('/login');
-      }
-      return Promise.reject(response);
+      handleAuthError(response);
+      return Promise.reject(response.data);
     }
     return response;
   },
   (err) => {
-    err.response.statusText = handleNetworkError(err.response.status);
-    errorMsg(err.response.statusText);
+    handleNetworkError(err.response);
     return Promise.reject(err.response);
   },
 );
