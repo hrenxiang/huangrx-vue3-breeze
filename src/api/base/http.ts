@@ -21,9 +21,7 @@ const request = axios.create({
 
 // 请求拦截器：处理请求头
 request.interceptors.request.use(
-  async (config: InternalAxiosRequestConfig) => {
-    return await handleChangeRequestHeader(config);
-  },
+  (config: InternalAxiosRequestConfig) => handleChangeRequestHeader(config),
   (error) => Promise.reject(error),
 );
 

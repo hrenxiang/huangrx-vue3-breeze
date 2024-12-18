@@ -46,21 +46,57 @@ export const handleAuthError = (response: AxiosResponse) => {
   }
 };
 
-// 更新请求头，增强功能
-export const handleChangeRequestHeader = async (
+/**
+ * 请求白名单，包含允许无需认证即可访问的路由。
+ * @constant {string[]}
+ * @name whiteList
+ */
+const whiteList = ['/login', '/register', '/index/images/**'];
+
+/**
+ * 验证给定的 URL 是否在白名单中。
+ *
+ * 该函数会检查 `config.url` 是否匹配白名单中的某个模式。支持两种模式匹配：
+ * 1. 精确匹配：白名单中的模式与 `config.url` 完全相同。
+ * 2. 前缀匹配：白名单中的模式以 `**` 结尾时，匹配 `config.url` 是否以该模式的前缀开头。
+ *
+ * @param {string[]} whiteList - 包含允许访问的 URL 模式的白名单数组。
+ * @param {InternalAxiosRequestConfig} config - 包含请求配置的对象，其中 `url` 属性是要验证的 URL。
+ * @returns {boolean} 如果 `config.url` 在白名单中，返回 `true`；否则返回 `false`。
+ */
+const verifyWhiteList = (
+  whiteList: string[],
   config: InternalAxiosRequestConfig,
-): Promise<InternalAxiosRequestConfig> => {
-  // 获取当前时间的 Unix 时间戳，单位秒
-  const currentTime = Math.floor(Date.now() / 1000);
+) => {
+  return whiteList.some((pattern) => {
+    // 对于以 /index/images/ 开头的特殊情况进行处理
+    if (pattern.endsWith('**')) {
+      const prefix = pattern.slice(0, -2);
+      return config.url?.startsWith(prefix);
+    } else {
+      return config.url === pattern;
+    }
+  });
+};
+
+// 更新请求头，增强功能
+export const handleChangeRequestHeader = (
+  config: InternalAxiosRequestConfig,
+): InternalAxiosRequestConfig => {
+  // 检查配置的 URL 是否匹配任何一个规则
+  const isMatched = verifyWhiteList(whiteList, config);
+  if (isMatched) {
+    return config;
+  }
 
   let token = getToken();
+  const refreshToken = getRefreshToken();
+  const currentTime = Math.floor(Date.now() / 1000);
+
   if (token) {
     const tokenExpiryTime = getTokenExpiry(token);
     if (tokenExpiryTime && tokenExpiryTime <= currentTime) {
-      removeToken();
-      const refreshToken = getRefreshToken();
-      if (refreshToken) {
-        // 过期时间
+      if (refreshToken && getTokenExpiry(refreshToken)) {
         const expiryTime = getTokenExpiry(refreshToken);
         if (expiryTime && expiryTime > currentTime) {
           try {
