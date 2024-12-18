@@ -37,6 +37,7 @@
     "axios": "^1.7.9",
     "element-plus": "^2.9.0",
     "install": "^0.13.0",
+    "jsencrypt": "^3.3.2",
     "jwt-decode": "^4.0.0",
     "lowlight": "^3.2.0",
     "moment": "^2.30.1",

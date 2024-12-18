@@ -6,6 +6,7 @@ import { authApi } from '@/api/business/auth.ts';
 import { successMsg } from '@/utils/message.ts';
 import { setRefreshToken, setToken } from '@/utils/auth.ts';
 import router from '@/router';
+import { getEncryptString } from '@/utils/rsa.ts';
 
 defineOptions({
   name: 'Login',
@@ -27,12 +28,18 @@ const rules = reactive<FormRules>({
 const login = () => {
   loginFormRef.value?.validate((valid) => {
     if (valid) {
-      authApi.doLogin(loginForm).then((res) => {
-        setToken(res.data.token.accessToken);
-        setRefreshToken(res.data.token.refreshToken);
-        successMsg('登录成功！');
-        router.push({ path: '/index' });
-      });
+      authApi
+        .doLogin({
+          username: loginForm.username,
+          password: getEncryptString(loginForm.password),
+          loginType: loginForm.loginType,
+        })
+        .then((res) => {
+          setToken(res.data.token.accessToken);
+          setRefreshToken(res.data.token.refreshToken);
+          successMsg('登录成功！');
+          router.push({ path: '/index' });
+        });
     }
   });
 };
@@ -46,16 +53,17 @@ const login = () => {
       </div>
       <div class="login-card-form">
         <el-form :model="loginForm" :rules="rules" ref="loginFormRef">
-          <el-form-item label="" prop="email">
+          <el-form-item label="" prop="username">
             <el-input
               class="login-card-form__input"
               v-model="loginForm.username"
               placeholder="请输入用户名"
             />
           </el-form-item>
-          <el-form-item label="" prop="email">
+          <el-form-item label="" prop="password">
             <el-input
               class="login-card-form__input"
+              type="password"
               v-model="loginForm.password"
               placeholder="请输入密码"
             />
@@ -121,6 +129,10 @@ const login = () => {
 
       :deep(.el-form-item) {
         margin-bottom: 4rem;
+      }
+
+      :deep(.el-form-item__error) {
+        padding-top: 8px;
       }
 
       .login-card-form__input {
