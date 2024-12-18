@@ -59,10 +59,6 @@ const whiteList = ['/login', '/register', '/index/images/**'];
  * 该函数会检查 `config.url` 是否匹配白名单中的某个模式。支持两种模式匹配：
  * 1. 精确匹配：白名单中的模式与 `config.url` 完全相同。
  * 2. 前缀匹配：白名单中的模式以 `**` 结尾时，匹配 `config.url` 是否以该模式的前缀开头。
- *
- * @param {string[]} whiteList - 包含允许访问的 URL 模式的白名单数组。
- * @param {InternalAxiosRequestConfig} config - 包含请求配置的对象，其中 `url` 属性是要验证的 URL。
- * @returns {boolean} 如果 `config.url` 在白名单中，返回 `true`；否则返回 `false`。
  */
 const verifyWhiteList = (
   whiteList: string[],
@@ -80,13 +76,13 @@ const verifyWhiteList = (
 };
 
 // 更新请求头，增强功能
-export const handleChangeRequestHeader = (
+export const handleChangeRequestHeader = async (
   config: InternalAxiosRequestConfig,
-): InternalAxiosRequestConfig => {
+): Promise<InternalAxiosRequestConfig> => {
   // 检查配置的 URL 是否匹配任何一个规则
   const isMatched = verifyWhiteList(whiteList, config);
   if (isMatched) {
-    return config;
+    return Promise.resolve(config);
   }
 
   let token = getToken();
@@ -96,45 +92,47 @@ export const handleChangeRequestHeader = (
   if (token) {
     const tokenExpiryTime = getTokenExpiry(token);
     if (tokenExpiryTime && tokenExpiryTime <= currentTime) {
-      if (refreshToken && getTokenExpiry(refreshToken)) {
+      if (refreshToken) {
         const expiryTime = getTokenExpiry(refreshToken);
         if (expiryTime && expiryTime > currentTime) {
-          try {
-            const res = await authApi.doLogin({
+          await authApi
+            .doLogin({
               refreshToken,
               loginType: 'refresh_token',
-            });
-
-            token = res.data.token.accessToken;
-            setToken(res.data.token.accessToken);
-            setRefreshToken(res.data.token.refreshToken);
-          } catch (error) {
-            removeRefreshToken();
-            errorMsg('登陆失效，请重新登陆！');
-            nextTick(() => {
+            })
+            .then((res) => {
+              token = res.data.token.accessToken;
+              setToken(res.data.token.accessToken);
+              setRefreshToken(res.data.token.refreshToken);
+            })
+            .catch(() => {
+              removeToken();
+              removeRefreshToken();
+              errorMsg('登陆失效，请重新登陆！');
               router.push('/login').then();
-            }).then();
-            return Promise.reject(error); // 这里直接返回 reject，阻止后续请求继续发送
-          }
+            });
         } else {
+          removeToken();
           removeRefreshToken();
           errorMsg('登陆失效，请重新登陆！');
-          nextTick(() => {
-            router.push('/login').then();
-          }).then();
-          return Promise.reject('Token expired, please login again');
+          router.push('/login').then();
         }
       } else {
+        removeToken();
+        removeRefreshToken();
         errorMsg('登陆失效，请重新登陆！');
-        nextTick(() => {
-          router.push('/login').then();
-        }).then();
-        return Promise.reject('No refresh token available');
+        router.push('/login').then();
       }
     }
+
+    config.headers['Authorization'] = token ? `Bearer ${token}` : '';
+    config.headers['Accept-Language'] = localStorage.getItem('locale') || 'en';
+    return Promise.resolve(config);
   }
 
-  config.headers['Authorization'] = token ? `Bearer ${token}` : '';
-  config.headers['Accept-Language'] = localStorage.getItem('locale') || 'en';
-  return config;
+  removeToken();
+  removeRefreshToken();
+  errorMsg('登陆失效，请重新登陆！');
+  router.push('/login').then();
+  return Promise.reject();
 };
